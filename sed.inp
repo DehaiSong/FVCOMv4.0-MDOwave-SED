@@ -1,0 +1,975 @@
+!========================================================= Hernan G. Arango ===
+!  Copyright (c) 2002-2014 The ROMS/TOMS Group                                !
+!    Licensed under a MIT/X style license                                     !
+!    See License_ROMS.txt                                                     !
+!==============================================================================
+!                                                                             !
+! Input parameters can be entered in ANY order, provided that the parameter   !
+! KEYWORD (usually, upper case) is typed correctly followed by "="  or "=="   !
+! symbols. Any comment lines are allowed and must begin with an exclamation   !
+! mark (!) in column one.  Comments may  appear to the right of a parameter   !
+! specification to improve documentation.  Comments will be ignored  during   !
+! reading.  Blank lines are also allowed and ignored. Continuation lines in   !
+! a parameter specification are allowed and must be preceded by a backslash   !
+! (\).  In some instances, more than one value is required for a parameter.   !
+! If fewer values are provided, the  last value  is assigned for the entire   !
+! parameter array.  The multiplication symbol (*),  without blank spaces in   !
+! between, is allowed for a parameter specification.  For example, in a two   !
+! grids nested application:                                                   !
+!                                                                             !
+!    AKT_BAK = 2*1.0d-6  2*5.0d-6              ! m2/s                         !
+!                                                                             !
+! indicates that the first two entries of array AKT_BAK,  in fortran column-  !
+! major order, will have the same value of "1.0d-6" for grid 1,  whereas the  !
+! next two entries will have the same value of "5.0d-6" for grid 2.           !
+!                                                                             !
+! In multiple levels of nesting and/or multiple connected domains  step-ups,  !
+! "Ngrids" entries are expected for some of these parameters.  In such case,  !
+! the order of the entries for a parameter is extremely important.  It  must  !
+! follow the same order (1:Ngrids) as in the state variable declaration. The  !
+! USER may follow the above guidelines for specifying his/her values.  These  !
+! parameters are marked by "=" plural symbol after the KEYWORD.               !
+!                                                                             !
+!==============================================================================
+!                                                                             !
+!-----------------------------------------------------------------------------!
+! Sediment Module Dynamics Parameters
+! NCS              : Number of cohesive (mud) sediment tracers
+! NNS              : Number of non-cohesive (sand) sediment tracers
+! BEDLOAD          : True of bedload is to be considered
+! SUSLOAD          : True of suspended load is to be considered
+! COHESIVE_BED     : use to activate cohesive bed model 
+! MIXED_BED        : use to activate mixed bed behavior 
+! NONCOHESIVE_BED2 : use modified bed model of Sherwood et al
+! SED_MORPH        : use to allow bottom model elevation to evolve 
+! SED_FLOCS        : use flocculation model of Verney et al., 2011
+! SED_BIOMASS      : use to activate sediment biomass
+! SED_BIODIFF      : use to activate sediment biodiffusivity
+! SED_DEFLOC       : use flocculation decomposition in sediment bed
+! VERT_HINDERED    : use hindered settling in the water column
+! SED_ONED         : use one-dimensional sediment model
+! SED_NUDGE        : flag for activiating sediment nudging on obc
+! SED_ALPHA        : sediment nudging relaxation factor 
+! SED_RAMP         : use damping ramp steps in sediment claculation
+! SED_START        : starting step for sediment calculation
+! N_REPORT         : step interval for sediment report
+! SED_PTSOURCE     : flag for activiating sediment point sources
+! SED_HOT_START    : use hot start in sediment calculation
+!------------------------------------------------------------------------------!
+
+NCS = 4 
+NNS = 0
+BEDLOAD = F 
+SUSLOAD = T
+COHESIVE_BED = F
+MIXED_BED = T
+NONCOHESIVE_BED2 = F
+SED_MORPH = T
+SED_FLOCS = F
+SED_BIOMASS = F
+SED_BIODIFF = F
+SED_DEFLOC = F
+VERT_HINDERED = F
+
+SED_ONED = F
+SED_NUDGE = F
+SED_ALPHA = 0.5
+SED_RAMP  = 86400
+SED_START = 0 !43200
+N_REPORT = 60
+
+SED_PTSOURCE = F 
+SED_HOT_START = F
+
+!------------------------------------------------------------------------------!
+! Sediment Biomass seagrass options 
+!------------------------------------------------------------------------------!
+SEAGRASS_BOTTOM = F
+SEAGRASS_SINK = F
+
+!------------------------------------------------------------------------------!
+! Bedload Model Parameters 
+!------------------------------------------------------------------------------!
+! Only one of below two formulations can be selected 
+! BEDLOAD_MPM     : Meyer-Peter Mueller formulation
+! BEDLOAD_SOULSBY : Soulsby formulation
+! 
+! Only one of below slope methods can be selected 
+! SLOPE_NEMETH    : nemeth slope method
+! SLOPE_LESSER    : lessod slope method
+! BEDLOAD_COEFF   : Bed load transport rate coefficient. [1:Ngrids].
+!------------------------------------------------------------------------------!
+BEDLOAD_MPM = T
+BEDLOAD_SOULSBY = F
+SLOPE_NEMETH = F
+SLOPE_LESSER = T
+BEDLOAD_COEFF = 0.15 
+
+
+!------------------------------------------------------------------------------!
+! Morphodynamics (unstable - will not be activated)
+!  MORPHO_MODEL  : F => no bathy change, T => bathy changes to follow bottom
+!  MORPHO_FACTOR : amount bathy is changed relative to calculated accre/depo
+!                  = 0, no change, = 1, follows bottom exactly
+!                  Caution, even if MORPHO_MODEL is F, 
+!                  MORPHO_FACTOR will still be active
+!                  and affect the rate of sediment dep/ero and bedload flux
+!  MORPHO_INCR   : Update the bathymetry only every morpho_incr iterations of  
+!                  internal time steps.  MORPHO_INCR > 10 can allow flow to adjust
+!                  a bit before morphing.  
+!------------------------------------------------------------------------------!
+
+MORPHO_MODEL  = F
+MORPHO_FACTOR = 1.0
+MORPHO_INCR   = 1
+MORPHO_STRT   = 0
+
+!------------------------------------------------------------------------------!
+! Sediment Module Reporting and Archiving Control 
+!   SED_DUMPBED : (T/F) Dump all the bed variables 
+!   SED_DUMPBOT : (T/F) Dump all the bottom variables 
+!------------------------------------------------------------------------------!
+SED_DUMPBED = T
+SED_DUMPBOT = T
+
+!------------------------------------------------------------------------------
+!  suspended load's initial settings for multipe sediment class
+!------------------------------------------------------------------------------
+!
+! MIN_SRHO               : minimum sediment density
+! INIT_MUD_CONCENTRATION : initial mud concentration for all sediment classes
+! SED_TAU_CD_CONST       : use constant critical stress for deposition     
+! SED_TAU_CD_LIN         : use linear critical stress for deposition
+!------------------------------------------------------------------------------
+MIN_SRHO = 1050.
+INIT_MUD_CONCENTRATION = 0.0  0.0  0.0 
+SED_TAU_CD_CONST = F 
+SED_TAU_CD_LIN = F
+
+!------------------------------------------------------------------------------
+!  vertical settling control 
+!------------------------------------------------------------------------------
+LINEAR_CONTINUATION = T
+NEUMANN = F
+
+
+!------------------------------------------------------------------------------
+!  option for setting biodiffusivity profile
+!------------------------------------------------------------------------------
+DB_PROFILE = T
+
+!------------------------------------------------------------------------------
+! Bed Parameters and its initial settings
+!
+! NBED               : number of bed layers
+! INF_BED            : true if infinite supply of sediment is available   [logical]
+! INIT_BED_POROSITY  : initial bed porosity (spatially constant, if required
+!                      spatially variable, set in init_sed.F) [0-1]
+! INIT_BED_THICKNESS : initial total thickness of the bed (m), can be overwritten
+!                      in init_sed.F if non-constant is desired. 
+! bed_frac           : Sediment fraction of each size class in each bed   
+!                      layer(nondimensional: 0-1.0).  Sum of bed_frac = 1.0          
+! bed_biodiff        : layer bio-diffusivity
+! BED_TAU_CRIT       : critical shear shear at each bed layer
+! bed_mass           : Sediment mass of each size class in each bed layer  
+!                      (kg/m2). Calculated in the model.
+! Dimension:
+!
+! INIT_BED_THICKNESS  => [1:NBED]
+! INIT_BED_AGE        => [1:NBED]
+! INIT_BED_POROSITY   => [1:NBED]
+! INIT_BED_BIODIFF    => [1:NBED]
+! INIT_BED_TAU_CRIT   => [1:NBED]
+! INIT_BED_FRACTION   => [1:NST,1:NBED]
+!------------------------------------------------------------------------------
+
+NBED    = 2
+INF_BED = F
+INIT_BED_THICKNESS = 10.0 10.0
+INIT_BED_AGE       = 1.0 1.0
+INIT_BED_POROSITY  = 0.5 0.5
+INIT_BED_BIODIFF   = 0.0 0.0
+INIT_BED_TAU_CRIT  = 0.2 0.8
+INIT_BED_FRACTION  = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 
+ 
+!------------------------------------------------------------------------------
+!  Sediment model control switch.
+!------------------------------------------------------------------------------
+
+! Switch is used to control sediment model computation within nested and/or
+! multiple connected grids, [1:Ngrids].
+
+Lsediment = T
+
+!------------------------------------------------------------------------------
+!  General sediment bed model parameters.
+!------------------------------------------------------------------------------
+
+!------------------------------------------------------------------------------
+! NEWLAYER_THICK : Depositional bed layer thickness criteria to create a new layer (m). If
+!                  deposition exceeds this value, then a new layer is created, [1:Ngrids].
+! TRANSC         : cohesive transition
+! TRANSN         : noncohesive transition
+! Dbmax          : Maximum biodiffusivity
+! Dbmin          : Minimum biodiffusivity
+! Dbzs           : Depth of maximum biodiffusivity
+! Dbzm           : Depth of end of exponential biodiffusivity
+! Dbzp           : Depth of minimum biodiffusivity
+!------------------------------------------------------------------------------
+NEWLAYER_THICK = 0.01
+
+TRANSC = 0.03
+TRANSN = 0.2
+DBMAX = 1.0e-10
+DBMIN = 1.0e-12
+DBZS = 0.002
+DBZM = 0.08
+DBZP = 0.01
+
+!------------------------------------------------------------------------------
+! Suspended Cohesive Sediment Parameters, [1:NCS] values expected.
+!------------------------------------------------------------------------------
+!
+! MUD_NAME     : Names of cohesive sediment class
+! MUD_SD50     : Median sediment grain diameter (mm).
+! MUD_CSED     : Sediment concentration (kg/m3).
+! MUD_SRHO     : Sediment grain density (kg/m3).
+! MUD_WSED     : Particle settling velocity (mm/s).
+! MUD_ERATE    : Surface erosion rate (kg/m2/s).
+! MUD_TAU_CE   : Critical shear for erosion  (N/m2).
+! MUD_TAU_CD   : Critical shear for deposition (N/m2).
+! MUD_POROS    : Porosity (nondimensional: 0.0-1.0):  Vwater/(Vwater+Vsed).
+! MUD_TNU2     : Harmonic horizontal diffusion of tracer for nonlinear model
+! MUD_TNU4     : biharmonic horizontal diffusion of tracer for nonlinear model
+! MUD_Sponge   : Logical switches (TRUE/FALSE) to increase horizontal diffusivity
+!                of cohesive sediment trace in specific areas of the application
+!                domain (like sponge areas) for the desired grid:
+! MUD_AKT_BAK  : Vertical mixing coefficients for tracers in nonlinear model and
+! MUD_AKT_fac  : basic state scale factor in adjoint-based algorithms.
+! MUD_TNUDG    : Nudging/relaxation time scales, inverse scales will be computed
+!                internally.
+! MUD_MORPH_FAC: Morphological time scale factor (greater than or equal to 1.0). A
+!                value of 1.0 has no scale effect.
+! MUD_Ltsrc    : Logical switches (TRUE/FALSE) to activate tracers point Sources/Sinks
+!                (like river runoff) and to specify which tracer variables to consider.
+!                See glossary below for details.
+! MUD_Ltclm    : Logical switches (TRUE/FALSE) to read and process cohesive sediment
+!                tracers climatology. See glossary below for details.
+! MUD_Tnudge   : Logical switches (TRUE/FALSE) to nudge the desired cohesive sediment
+!                tracer climatology field. If not analytical climatology fields, users
+!                need to turn on the logical switches above to process the fields from
+!                the climatology NetCDF file that are needed for nudging. See glossary
+!                below for details.
+! MUD_Ltracer  : Logical switches (TRUE/FALSE) to specify which variables to consider on
+!                tracers point Sources/Sinks (like river runoff). See glossary below for
+!                details.
+!------------------------------------------------------------------------------
+
+MUD_NAME      = mud_1   mud_2   mud_3    mud_4
+MUD_SD50      = 0.02   0.02    0.015    0.025
+MUD_CSED      = 0.0     0.0     0.0      0.0
+MUD_SRHO      = 2650.0  2650.0  2650.0   3650.0
+MUD_WSED      = 0.125     0.125     0.4      0.5
+MUD_ERATE     = 5.0e-2  5.0e-2  5.0e-2   5.0e-2  
+MUD_TAU_CE    = 0.001     0.002    0.005     0.01 
+MUD_TAU_CD    = 0.08    0.08    0.05     0.05 
+MUD_POROS     = 0.5     0.5     0.5      0.5 
+MUD_TNU2      = 0.0     0.0     0.0      0.0           ! m2/s
+MUD_TNU4      = 0.0     0.0     0.0      0.0           ! m4/s
+MUD_Sponge    = F       F       F        F
+MUD_AKT_BAK   = 5.0e-6  5.0e-6  5.0e-6   5.0e-6        ! m2/s
+MUD_AKT_fac   = 1.0     1.0     1.0      1.0           ! nondimensional
+MUD_TNUDG     = 0.0     0.0     0.0      0.0           ! days
+MUD_MORPH_FAC = 1.0     1.0     1.0      1.0           ! nondimensional
+MUD_Ltsrc     = F       F       F        F
+MUD_Ltclm     = F       F       F        F
+MUD_Tnudge    = F       F       F        F
+MUD_Ltracer   = F       F       F        F
+
+!------------------------------------------------------------------------------
+! Non-cohesive Sediment Parameters, [1:NNS,1:Ngrids] values expected.
+!------------------------------------------------------------------------------
+!
+! SAND_NAME      : Names of non-cohesive sediment class
+! SAND_SD50      : Median sediment grain diameter (mm).
+! SAND_CSED      : Sediment concentration (kg/m3).
+! SAND_SRHO      : Sediment grain density (kg/m3).
+! SAND_WSED      : Particle settling velocity (mm/s).
+! SAND_ERATE     : Surface erosion rate (kg/m2/s).
+! SAND_TAU_CE    : Critical shear for erosion(N/m2).
+! SAND_TAU_CD    : Critical shear for deposition (N/m2).
+! SAND_PORO      : Porosity (nondimensional: 0.0-1.0):  Vwater/(Vwater+Vsed).
+! SAND_TNU2      : Harmonic/biharmonic horizontal diffusion of tracer for nonlinear model
+! SAND_TNU4      : biharmonic horizontal diffusion of tracer for nonlinear model
+! SAND_Sponge    : Logical switches (TRUE/FALSE) to increase horizontal diffusivity
+!                  of noncohesive sediment trace in specific areas of the application
+!                  domain (like sponge areas) for the desired grid:
+! SAND_AKT_BAK   : Vertical mixing coefficients for tracers in nonlinear model and
+! SAND_AKT_fac   : basic state scale factor in adjoint-based algorithms.
+! SAND_TNUDG     : Nudging/relaxation time scales, inverse scales will be computed
+!                  internally.
+! SAND_MORPH_FAC : Morphological time scale factor (greater than or equal to 1.0). A
+!                  value of 1.0 has no scale effect.
+! SAND_Ltsrc     : Logical switches (TRUE/FALSE) to activate tracers point Sources/Sinks
+!                  (like river runoff) and to specify which tracer variables to consider.
+!                  See glossary below for details.
+! SAND_Ltclm     : Logical switches (TRUE/FALSE) to read and process noncohesive sediment
+!                  tracers climatology. See glossary below for details.
+! SAND_Tnudge    : Logical switches (TRUE/FALSE) to nudge the desired noncohesive sediment
+!                  tracer climatology field. If not analytical climatology fields, users
+!                  need to turn on the logical switches above to process the fields from
+!                  the climatology NetCDF file that are needed for nudging. See glossary
+!                  below for details.
+!------------------------------------------------------------------------------
+
+SAND_NAME      = sand_1  sand_2
+SAND_SD50      = 0.3     0.2
+SAND_CSED      = 0.0     0.0
+SAND_SRHO      = 2650.0  2650
+SAND_WSED      = 0.3     0.8
+SAND_ERATE     = 5.0E-5  1.0E-5 
+SAND_TAU_CE    = 0.2    0.35
+SAND_TAU_CD    = 0.2    0.25
+SAND_POROS     = 0.5     0.5
+SAND_TNU2      = 0.0     0.0                         ! m2/s
+SAND_TNU4      = 0.0     0.0                         ! m4/s
+SAND_Sponge    = F       F 
+SAND_AKT_BAK   = 5.0e-5  5.0e-5                      ! m2/s
+SAND_AKT_fac   = 1.0     1.0                         ! nondimensional
+SAND_TNUDG     = 0.0     0.0                         ! days
+SAND_MORPH_FAC = 1.0     1.0                         ! nondimensional
+SAND_Ltsrc     = F       F
+SAND_Ltclm     = F       F
+SAND_Tnudge    = F       F
+
+
+!------------------------------------------------------------------------------
+! COHESIVE / MIXED bed critical shear
+!------------------------------------------------------------------------------
+! MUD_TAUCR_MIN   : tcr_min         minimum shear for erosion
+! MUD_TAUCR_MAX   : tcr_max         maximum shear for erosion
+! MUD_TAUCR_SLOPE : tcr_slp         Tau_crit profile slope
+! MUD_TAUCR_OFF   : tcr_off         Tau_crit profile offset
+! MUD_TAUCR_TIME  : tcr_tim         Tau_crit consolidation rate
+!------------------------------------------------------------------------------
+MUD_TAUCR_MIN   = 0.030000
+MUD_TAUCR_MAX   = 2.200000  !2.20
+MUD_TAUCR_SLOPE = 5.000000
+MUD_TAUCR_OFF   = 2.000000
+MUD_TAUCR_TIME  = 28800.0
+
+
+!------------------------------------------------------------------------------
+! Flocculation Sediment Parameters, [1] values expected.
+!------------------------------------------------------------------------------
+!
+!  FLOC_TURB_DISS  : calculate the dissipation rate from turbulence closure
+!  FLOC_BBL_DISS   : calculate the dissipation rate from the bottom boundary layer
+!  l_ADS           : boolean set to .true. if differential settling aggregation 
+!  l_ASH           : boolean set to .true. if shear aggregation
+!  l_COLLFRAG      : boolean set to .true. if collision-induced fragmentation enable
+!  f_dp0           : Primary particle size (m), typically 4e-6 m
+!  f_nf            : Floc fractal dimension, typically ranging from 1.6 to 2.6
+!  f_dmax          : (unused) Maximum diameter (m)
+!  f_nb_frag       : number of fragments by shear erosion. If binary/ternary : 2.
+!  f_alpha         : flocculation efficiency, ranging from 0 .to 1.
+!  f_beta          : shear fragmentation rate
+!  f_ater          : for ternary breakup, use 0.5, for binary : 0. 
+!                     (a boolean could be better)
+!  f_ero_frac      : fraction of the shear fragmentation term 
+!                    transfered to shear erosion. 
+!                    Ranging from 0. (no erosion) to 1. (all erosion)
+!  f_ero_nbfrag    : Number of fragments induced by shear erosion.   
+!  f_ero_iv        : fragment size class (could be changed to a particle 
+!                    size or a particle distribution (INTEGER)
+!  f_collfragparam : Fragmentation rate for collision-induced breakup
+!  f_clim          : min concentration below which flocculation
+!                    processes are not calculated
+!  l_testcase      : - if .TRUE. sets G(t) to values from Verney et al., 
+!                    2011 lab experiment
+!  GLS_P           : Stability exponent (non-dimensional).
+!  GLS_M           : Turbulent kinetic energy exponent (non-dimensional).
+!  GLS_N           : Turbulent length scale exponent (non-dimensional).
+!
+!  Suggested values for various parameterizations:
+!
+!              k-kl         k-epsilon    k-omega      gen
+!
+!      GLS_P = 0.d0          3.0d0       -1.0d0        2.0d0
+!      GLS_M = 1.d0          1.5d0        0.5d0        1.0d0
+!      GLS_N = 1.d0         -1.0d0       -1.0d0       -0.67d0
+!   GLS_CMU0 = 0.5544d0      0.5477d0     0.5477d0     0.5544d0
+!------------------------------------------------------------------------------
+!
+FLOC_TURB_DISS = T
+FLOC_BBL_DISS = F
+l_ADS = F
+l_ASH = T
+l_COLLFRAG = F
+f_dp0 = 0.000004 
+f_nf = 2.0 
+f_dmax = 0.0015 
+f_nb_frag = 2.0 
+f_alpha = 0.35 
+f_beta = 0.15 
+f_ater = 0.0 
+f_ero_frac = 0.0 
+f_ero_nbfrag = 2.0 
+f_ero_iv = 1
+f_collfragparam = 0.01 
+f_clim = 0.001  
+l_testcase = F
+GLS_P =  3.0
+GLS_M =  1.5
+GLS_N = -1.0
+GLS_CMU0 = 0.5477
+
+!------------------------------------------------------------------------------
+! Flocculation Descomposition in Bed Sediment Parameters, [1] values expected.
+!------------------------------------------------------------------------------
+!
+! MUD_FRAC_EQ : Equilibrium fractional class distribution (they should add up to 1).
+! t_dfloc     : Time scale of flocculation descomposition in bed
+! nTbiom      : Number of hours for depth integration
+!------------------------------------------------------------------------------
+MUD_FRAC_EQ = 1.00 0.00 0.0  0.0  0.0  0.0  0.0  0.00  0.0  0.0  0.0  0.0  0.0  0.0  0.0  
+t_dfloc = 200.0 
+nTbiom = 1
+
+
+
+!------------------------------------------------------------------------------
+! SeaGrass Parameters, [1] values expected.
+!------------------------------------------------------------------------------
+! SGR_DIAM   : Seagrass diameter
+! SGR_DENS   : Seagrass density (no shoot density)
+! SGR_HTHRES : Seagrass height threshold
+------------------------------------------------------------------------------
+SGR_DIAM = 0.01
+SGR_DENS = 500.0
+SGR_HTHRES = 1.25
+
+
+
+!------------------------------------------------------------------------------
+!   The Options MB_Z0BL and MB_Z0RIP should be activated concurrently.        |
+!                                                                             !
+!  MB_BBL_USE        !  use if Meinte Blaas BBL closure                       !
+!  MB_CALC_ZNOT      !  use if computing bottom roughness internally          !
+!  MB_CALC_UB        !  use if computing bottom orbital velocity internally   !
+!  MB_Z0BIO          !  use if biogenic bedform roughness for ripples         !
+!  MB_Z0BL           !  use if bedload roughness for ripples                  !
+!  MB_Z0RIP          !  use if bedform roughness for ripples                  !
+!------------------------------------------------------------------------------ 
+
+MB_BBL_USE   = F
+MB_CALC_ZNOT = F
+MB_CALC_UB   = F
+MB_Z0BIO     = F
+MB_Z0BL      = F
+MB_Z0RIP     = F
+
+!------------------------------------------------------------------------------
+! OPTIONS for Styles and Glenn (2000) bottom boundary layer closure:          !
+!                                                                             !
+! SG_BBL_USE        !  use if Styles and Glenn (2000) BBL closure             !
+! SG_CALC_ZNOT      !  use if computing bottom roughness internally           !
+! SG_CALC_UB        !  use if computing bottom orbital velocity internally    !
+! SG_LOGINT         !  use if logarithmic interpolation of (Ur,Vr)            !
+!------------------------------------------------------------------------------
+
+SG_BBL_USE   = F
+SG_CALC_ZNOT = F
+SG_CALC_UB   = F
+SG_LOGINT    = F
+
+!------------------------------------------------------------------------------
+! OPTIONS for the Sherwood/Signell/Warner bottom boundary layer closure:      !
+!                                                                             !
+! SSW_BBL_USE       !  use if Sherwood et al. BBL closure                     !
+! SSW_CALC_ZNOT     !  use if computing bottom roughness internally           !
+! SSW_LOGINT        !  use if logarithmic interpolation of (Ur,Vr)            !
+! SSW_CALC_UB       !  use if computing bottom orbital velocity internally    !
+! SSW_FORM_DRAG_COR !  use to activate form drag coefficient                  !
+!                   !  should be activated if using maximum shear stress      !
+!                   !  under wave and current
+! SSW_ZOBIO         !  use if biogenic bedform roughness from ripples         !
+! SSW_ZOBL          !  use if bedload roughness for ripples                   !
+! SSW_ZORIP         !  use if bedform roughness from ripples                  !
+!                ---Only one method listed below can be activated.
+! SGWC              !  use Styles and Glenn (1999) method                     !
+! M94WC             !  use Madson(1994) method                                !
+!                ---Only one roughness listed below can be activated          ! 
+! GM82_RIPRUF       !  use Grant-Madson (1982) ripple roughness               !
+! N92_RIPRUF        !  use Nielsen (1992) ripple roughness                    !
+! R88_RIPRUF        !  use Raudkivi (1988) ripple roughness                   !
+!------------------------------------------------------------------------------
+
+SSW_BBL_USE       = T
+SSW_CALC_ZNOT     = F
+SSW_LOGINT        = F
+SSW_CALC_UB       = F
+SSW_FORM_DRAG_COR = F
+SSW_ZOBIO         = F
+SSW_ZOBL          = F
+SSW_ZORIP         = F
+SGWC              = F
+M94WC             = T
+GM82_RIPRUF       = F
+N92_RIPRUF        = T
+R88_RIPRUF        = F
+
+
+
+
+
+
+
+
+
+
+
+!  GLOSSARY:
+!  =========
+
+!------------------------------------------------------------------------------
+!  Sediment model control switch, [1:Ngrids].
+!------------------------------------------------------------------------------
+!
+!
+! NCS          Number of cohesive (mud) sediment tracer type variables. This
+!                parameter is only relevant if CPP option SEDIMENT is
+!                activated.
+!
+! NNS          Number of non-cohesive (sand) sediment tracer type variables.
+!                This parameter is only relevant if CPP option SEDIMENT is
+!                activated.
+!                        
+!                The total number of sediment tracers is NST=NCS+NNS.  Notice
+!                that NST must be greater than zero (NST>0).
+!
+!  Lsediment       Switch to control sediment model computation within nested
+!                    and/or multiple connected grids. By default this switch
+!                    is set to TRUE in "mod_scalars" for all grids. The USER
+!                    has the option, for example, to compute sediment in just
+!                    one of the nested grids. If so, this switch needs to be
+!                    consistent with the dimension parameter NST in input
+!                    script (ocean.in).  In order to make the model more
+!                    efficient in  memory usage, NST(:) should be zero in
+!                    such grids.
+!
+!------------------------------------------------------------------------------
+!  General sediment bed model controls, [1:Ngrids] values are expected.
+!------------------------------------------------------------------------------
+!
+!  NEWLAYER_THICK  Depositional bed layer thickness criteria to create a new
+!                    layer (m). If deposition exceeds this value, then a new
+!                    layer is created.
+!
+!  BEDLOAD_COEFF   Bed load transport rate coefficient.
+!
+!------------------------------------------------------------------------------
+! Lateral boundary conditions parameters for all sediment tracers.
+!------------------------------------------------------------------------------
+!
+! The lateral boundary conditions are now specified with logical switches
+! instead of CPP flags to allow nested grid configurations. Their values are
+! load into structured array:
+!
+!    LBC(1:4, nLBCvar, Ngrids)
+!
+! where 1:4 are the number of boundary edges, nLBCvar are the number LBC state
+! variables, and Ngrids is the number of nested grids. For Example, to apply
+! gradient boundary conditions to any tracer we use:
+!
+!    LBC(iwest,  isTvar(itrc), ng) % gradient
+!    LBC(ieast,  isTvar(itrc), ng) % gradient
+!    LBC(isouth, isTvar(itrc), ng) % gradient
+!    LBC(inorth, isTvar(itrc), ng) % gradient
+!
+! The lateral boundary conditions for all sediment tracers (cohesive plus
+! noncohesive) are entered with a keyword. This keyword is case insensitive
+! and usually has three characters. However, it is possible to have compound
+! keywords, if applicable. For example, the keyword "RadNud" implies radiation
+! boundary condition with nudging. This combination is usually used in
+! active/passive radiation conditions.
+!
+! It is possible to specify the lateral boundary conditions for all sediment
+! tracers in a compact form with a single entry.  for example, in a East-West
+! periodic application we can just have:
+!
+!                   W       S       E       N
+!                   e       o       a       o
+!                   s       u       s       r
+!                   t       t       t       t
+!                           h               h
+!
+!                   1       2       3       4
+!
+!  LBC(isTvar) =   Per     Clo     Per     Clo
+!
+! Then, the standard input processing routine will assume that all the
+! sediment tracers have the same lateral boundary condition specified by
+! the single entry.
+!
+!   Keyword    Lateral Boundary Condition Type
+!
+!   Cla        Clamped                                _____N_____     j=Mm
+!   Clo        Closed                                |     4     |
+!   Gra        Gradient                              |           |
+!   Nes        Nested                              1 W           E 3
+!   Nud        Nudging                               |           |
+!   Per        Periodic                              |_____S_____|
+!   Rad        Radiation                                   2          j=1
+!                                                   i=1         i=Lm
+!
+!  LBC(isTvar)    Sediment Tracers, [1:4, 1:NST, Ngrids] values are expected.
+!
+! Similarly, the adjoint-based algorithms (ADM, TLM, RPM) can have different
+! lateral boundary conditions keywords:
+!
+!  ad_LBC(isTvar) Sediment Tracers, [1:4, 1:NBT, Ngrids] values are expected.
+!
+!------------------------------------------------------------------------------
+! Suspended Cohesive Sediment KEYWORDS, [1:NCS,1:Ngrids] values expected.
+!------------------------------------------------------------------------------
+!
+!  MUD_SD50        Median sediment grain diameter (mm).
+!
+!  MUD_CSED        Sediment concentration (kg/m3). It may be used to initialize
+!                    sediment fields using analytical expressions.
+!
+!  MUD_SRHO        Sediment grain density (kg/m3).
+!
+!  MUD_WSED        Particle settling velocity (mm/s).
+!
+!  MUD_ERATE       Surface erosion rate (kg/m2/s).
+!
+!  MUD_TAU_CE      Critical shear for erosion (N/m2).
+!
+!  MUD_TAU_CD      Critical shear for deposition (N/m2).
+!
+!  MUD_POROS       Porosity (nondimensional: 0.0-1.0):  Vwater/(Vwater+Vsed).
+!
+!  MUD_TNU2        Nonlinar model lateral, harmonic, constant, mixing
+!                    coefficient (m2/s) for suspended cohesive sediment;
+!                    [1:NCS,1:Ngrids]. If variable horizontal diffusion is
+!                    activated, MUD_TNU2 is the mixing coefficient for
+!                    the largest grid-cell in the domain.
+!
+!  MUD_TNU4        Nonlinar model lateral, biharmonic, constant, mixing
+!                    coefficient (m4/s) for suspended cohesive sediment;
+!                    [1:NCS,1:Ngrids]. If variable horizontal diffusion is
+!                    activated, MUD_TNU4 is the mixing coefficient for
+!                    the largest grid-cell in the domain.
+!
+!  ad_MUD_TNU2     Adjoint-based algorithms lateral, harmonic, constant,
+!                    mixing coefficient (m2/s) for suspended cohesive
+!                    sediment; [1:NCS,1:Ngrids]. If variable horizontal
+!                    diffusion is activated, ad_MUD_TNU2 is the mixing
+!                    coefficient for the largest grid-cell in the domain.
+!
+!  ad_MUD_TNU4     Adjoint-based algorithms lateral, harmonic, constant,
+!                    mixing coefficient (m4/s) for suspended cohesive
+!                    sediment; [1:NCS,1:Ngrids]. If variable horizontal
+!                    diffusion is activated, ad_MUD_TNU4 is the mixing
+!                    coefficient for the largest grid-cell in the domain.
+!
+!  MUD_Sponge      Logical switches (TRUE/FALSE) to increase horizontal
+!                    diffusivity of cohesive sediment tracers in sponge
+!                    areas of the domain. The CPP option SPONGE is now
+!                    deprecated and replaced with this switch to
+!                    facilitate or not sponge areas of desired tracer
+!                    in a particular nested grid.
+!
+!  MUD_AKT_BAK     Background vertical mixing coefficient (m2/s),
+!                    AKT_BAK(idsed(i)) with i=1:NCS.
+!
+!  MUD_AKT_fac     Adjoint-based algorithms vertical mixing, basic state,
+!                   scale factor (nondimensional) for sediment tracer
+!                   variables; [1:NCS,1:Ngrids] values are expected. In
+!                   some applications, a smaller/larger values of vertical
+!                   mixing are necessary for stability. It is only used
+!                   when FORWARD_MIXING is activated.
+!
+!  MUD_TNUDG       Nudging time scale (days), TNUDG(idsed(i)) with i=1:NCS.
+!                    Inverse scale will be computed internally.
+!
+!  MUD_MORPH_FAC   Morphological time scale factor (nondimensional; greater
+!                    than or equal to 1.0). A value of 1.0 has no scale
+!                    effect.
+!
+!  MUD_Ltsrc       Logical switches (T/F) to activate cohesive sediment tracer
+!                    variables point Sources/Sinks; [1:NCS,1:Ngrids] values
+!                    are expected.
+!
+!                      MUD_Ltsrc(  1,ng)           mud_01
+!                      ...                         ...
+!                      MUD_Ltsrc(NCS,ng)           ...
+!
+!                    Recall that these switches are usually activated to add
+!                    river runoff as a point source.  At minimum, it is
+!                    necessary to specify both temperature and salinity for
+!                    all rivers. The other tracers are optional. The user needs
+!                    to know the correspondence between sediment variables and
+!                    indices idsed(1:NCS) when activating one or more of these
+!                    switches.
+!
+!                    This logical switch REPLACES and ELIMINATES the need to
+!                    have or read the variable "river_flag(river)" in the input
+!                    rivers forcing NetCDF file:
+!
+!                      double river_flag(river)
+!                        river_flag:long_name = "river runoff tracer flag"
+!                        river_flag:option_0 = "all tracers are off"
+!                        river_flag:option_1 = "only temperature"
+!                        river_flag:option_2 = "only salinity"
+!                        river_flag:option_3 = "both temperature and salinity"
+!                        river_flag:units = "nondimensional"
+!
+!                    This logic was too cumbersome and complicated when
+!                    additional tracers are considered. However, this change
+!                    is backward compatible.
+!
+!                    This logical switch will be used to activate the reading
+!                    of respective tracer variable from input river forcing
+!                    NetCDF file. If you want to add other tracer variables
+!                    (other than temperature and salinity) as a source for a
+!                    particular river(s), you just need to specify such values
+!                    on those river(s). Then, set the values to ZERO on the
+!                    other river(s) that do NOT require such river forcing for
+!                    that tracer. Recall that you need to specify the tracer
+!                    values for all rivers, even if their values are zero.
+!
+!  MUD_Ltclm       Logical switches (T/F) to process cohesive sediment tracer
+!                    climatology.  The CPP option TCLIMATOLOGY is now obsolete
+!                    and replaced with these switches to facilitate nesting
+!                    applications. Currently, the CLIMA(ng)%tclm is used for
+!                    horizontal mixing, sponges, and nudging.
+!
+!
+!                      MUD_Ltclm(  1,ng)           mud_01
+!                      ...                         ...
+!                      MUD_Ltclm(NCS,ng)           ...
+!
+!                    These switches also controls which climatology tracer
+!                    fields needs to be processed.  So we may reduce the
+!                    memory allocation for the CLIMA(ng)%tclm array.
+!
+!  MUD_Tnudge      Logical switches (T/F) to activate nugding of cohesive
+!                    sediment tracer climatology. These switches also control
+!                    which sediment tracer variables to nudge. The CPP option
+!                    TCLM_NUDGING is now obsolete and replaced with these
+!                    switches to facilitate nesting.
+!
+!                      MUD_Tnudge(  1,ng)          mud_01
+!                      ...                         ...
+!                      MUD_Tnudge(NCS,ng)          ...
+!
+!                    User also needs to TURN ON the respective logical switches
+!                    "MUD_Ltclm", described above, to process the required 3D
+!                    sediment tracer climatology data. This data can be set
+!                    with analytical functions (ANA_TCLIMA) or read from input
+!                    climatology NetCDF file(s).
+!
+!                    The nudging coefficients CLIMA(ng)%Tnudgcof can be set
+!                    with analytical functions in "ana_nudgcoef.h"  using CPP
+!                    option ANA_NUDGCOEF.  Otherwise, it will be read from
+!                    NetCDF file NUDNAME.
+!
+!  Hout(idmud)     Logical switches to activate writing of cohesive sediment
+!                    concentration into HISTORY NetCDF file,
+!                    HOUT(idTvar(idsed(i))) with i=1:NCS.
+!
+!  Hout(iMfrac)    Logical switches to activate writing of cohesive sediment
+!                    class fraction composition of each bed layer into HISTORY
+!                    NetCDF file, HOUT(idfrac(i)) with i=1,NCS.
+!
+!  Hout(iMmass)    Logical switches to activate writing of cohesive sediment
+!                    mass of each bed layer into HISTORY NetCDF file,
+!                    HOUT(idsed(i)) with i=1,NCS.
+!
+!  Hout(iMUbld)    Logical switches to activate writing of cohesive sediment
+!                    bed load at U-points into HISTORY NetCDF file,
+!                    HOUT(idsed(i)) with i=1,NCS.
+!
+!  Hout(iMVbld)    Logical switches to activate writing of cohesive sediment
+!                    bed load at V-points into HISTORY NetCDF file,
+!                    HOUT(idsed(i)) with i=1,NCS.
+!
+!  Aout(*M...)     Logical switches to activate writing of time-averaged
+!                    cohesive sediment concentration into AVERAGE NetCDF
+!                    file, AOUT(idTvar(idsed(i))) with i=1:NCS.
+!
+!                    Aout(idmud)                  suspended concentration
+!
+!                    Aout(iMTTav)                 quadratic <t*t> tracer terms
+!                    Aout(iMUTav)                 quadratic <u*t> tracer terms
+!                    Aout(iMVTav)                 quadratic <v*t> tracer terms
+!                    Aout(MHUTav)                 tracer volume flux, <Huon*t>
+!                    Aout(MHVTav)                 tracer volume flux, <Hvom*t>
+!
+!                    Aout(iMUbld)                 bed load at U-points
+!                    Aout(iMVbld)                 bed load at V-points
+!
+!  Dout(MT....)    Logical switches to activate writing of time-averaged
+!                    cohesive tracers diagnostic terms into DIAGNOSTIC
+!                    NetCDF file, DOUT(idsed(i),MT....) with i=1,NCS.
+!
+!                    Dout(MTrate)   Time rate of change
+!                    Dout(MThadv)   Horizontal total advection
+!                    Dout(MTxadv)   Horizontal  XI-advection
+!                    Dout(MTyadv)   Horizontal ETA-advection
+!                    Dout(MTvadv)   Vertical advection
+!                    Dout(MThdif)   Horizontal total diffusion
+!                    Dout(MTxdif)   Horizonta1  XI-diffusion
+!                    Dout(MTydif)   Horizontal ETA-diffusion
+!                    Dout(MTsdif)   Horizontal   S-diffusion
+!                    Dout(MTvdif)   Vertical diffusion
+!
+!------------------------------------------------------------------------------
+! Suspended Non-cohesive Sediment KEYWORDS, [1:NNS,1:Ngrids] values expected.
+!------------------------------------------------------------------------------
+!
+!  SAND_SD50       Median sediment grain diameter (mm).
+!
+!  SAND_CSED       Sediment concentration (kg/m3). It may be used to initialize
+!                    sediment fields using analytical expressions.
+!
+!  SAND_SRHO       Sediment grain density (kg/m3).
+!
+!  SAND_WSED       Particle settling velocity (mm/s).
+!
+!  SAND_Erate      Surface erosion rate (kg/m2/s).
+!
+!  SAND_TAU_CE     Critical shear for erosion (N/m2).
+!
+!  SAND_TAU_CD     Critical shear for deposition (N/m2).
+!
+!  SAND_POROS      Porosity (nondimensional: 0.0-1.0):  Vwater/(Vwater+Vsed).
+!
+!  SAND_TNU2       Nonlinar model lateral, harmonic, constant, mixing
+!                    coefficient (m2/s) for suspended non-cohesive sediment;
+!                    [1:NNS,1:Ngrids]. If variable horizontal diffusion
+!                    is activated, SAND_TNU2 is the mixing coefficient for
+!                    the largest grid-cell in the domain.
+!
+!  SAND_TNU4       Nonlinar model lateral, harmonic, constant, mixing
+!                    coefficient (m4/s) for suspended non-cohesive sediment;
+!                    [1:NNS,1:Ngrids]. If variable horizontal diffusion
+!                    is activated, SAND_TNU4 is the mixing coefficient for
+!                    the largest grid-cell in the domain.
+!
+!  ad_SAND_TNU2    Adjoint-based algorithms lateral, harmonic, constant,
+!                    mixing coefficient (m2/s) for suspended non-cohesive
+!                    sediment; [1:NNS,1:Ngrids]. If variable horizontal
+!                    diffusion is activated, SAND_TNU2 is the mixing
+!                    coefficient for the largest grid-cell in the domain.
+!
+!  ad_SAND_TNU4    Adjoint-based algorithms lateral, harmonic, constant,
+!                    mixing coefficient (m4/s) for suspended non-cohesive
+!                    sediment; [1:NNS,1:Ngrids]. If variable horizontal
+!                    diffusion is activated, SAND_TNU4 is the mixing
+!                    coefficient for the largest grid-cell in the domain.
+!
+!  SAND_Sponge     Logical switches (TRUE/FALSE) to increase horizontal
+!                    diffusivity of noncohesive sediment tracers in sponge
+!                    areas of the domain. The CPP option SPONGE is now
+!                    deprecated and replaced with this switch to
+!                    facilitate or not sponge areas of desired tracer
+!                    in a particular nested grid.
+!
+!  SAND_AKT_BAK    Background vertical mixing coefficient (m2/s),
+!                    AKT_BAK(idsed(i)) with i=NCS+1:NST.
+!
+!  SAND_AKT_fac    Adjoint-based algorithms vertical mixing, basic state,
+!                   scale factor (nondimensional) for sediment tracer
+!                   variables; [1:NNS,1:Ngrids] values are expected.
+!                   In some applications, a smaller/larger values of
+!                   vertical mixing are necessary for stability. It is
+!                   only used when FORWARD_MIXING is activated.
+!
+!  SAND_TNUDG      Nudging time scale (days), TNUDG(idsed(i)) with i=NCS+1:NST.
+!                    Inverse scale will be computed internally,
+!
+!  SAND_MORPH_FAC  Morphological time scale factor (nondimensional; greater
+!                    than or equal to 1.0). A value of 1.0 has no scale effect.
+!
+!  SAND_Ltsrc      Logical switches (T/F) to activate noncohesive sediment
+!                    tracer variables point Sources/Sinks; [1:NNS,1:Ngrids]
+!                    values are expected.
+!
+!                      SAND_Ltsrc(  1,ng)          sand_01
+!                      ...                         ...
+!                      SAND_Ltsrc(NNS,ng)          ...
+!
+!                    Recall that these switches are usually activated to add
+!                    river runoff as a point source.  At minimum, it is
+!                    necessary to specify both temperature and salinity for
+!                    all rivers. The other tracers are optional. The user needs
+!                    to know the correspondence between sediment variables and
+!                    indices idsed(NCS+1:NST) when activating one or more
+!                    of these switches.
+!
+!                    This logical switch REPLACES and ELIMINATES the need to
+!                    have or read the variable "river_flag(river)" in the input
+!                    rivers forcing NetCDF file:
+!
+!                      double river_flag(river)
+!                        river_flag:long_name = "river runoff tracer flag"
+!                        river_flag:option_0 = "all tracers are off"
+!                        river_flag:option_1 = "only temperature"
+!                        river_flag:option_2 = "only salinity"
+!                        river_flag:option_3 = "both temperature and salinity"
+!                        river_flag:units = "nondimensional"
+!
+!                    This logic was too cumbersome and complicated when
+!                    additional tracers are considered. However, this change
+!                    is backward compatible.
+!
+!                    This logical switch will be used to activate the reading
+!                    of respective tracer variable from input river forcing
+!                    NetCDF file. If you want to add other tracer variables
+!                    (other than temperature and salinity) as a source for a
+!                    particular river(s), you just need to specify such values
+!                    on those river(s). Then, set the values to ZERO on the
+!                    other river(s) that do NOT require such river forcing for
+!                    that tracer. Recall that you need to specify the tracer
+!                    values for all rivers, even if their values are zero.
+!
+!  SAND_Ltclm      Logical switches (T/F) to process noncohesive sediment
+!                    tracer climatology.  The CPP option TCLIMATOLOGY is now
+!                    obsolete and replaced with these switches to facilitate
+!                    nesting applications. Currently, the CLIMA(ng)%tclm is
+!                    used for horizontal mixing, sponges, and nudging.
+!
+!                      SAND_Ltclm(  1,ng)          sand_01
+!                      ...                         ...
+!                      SAND_Ltclm(NNS,ng)          ...
+!
+!                    These switches also controls which climatology tracer
+!                    fields needs to be processed.  So we may reduce the
+!                    memory allocation for the CLIMA(ng)%tclm array.
+!
+!  SAND_Tnudge     Logical switches (T/F) to activate nugding of noncohesive
+!                    sediment tracer climatology. These switches also control
+!                    which sediment tracer variables to nudge. The CPP option
+!                    TCLM_NUDGING is now obsolete and replaced with these
+!                    switches to facilitate nesting.
+!
+!                      MUD_Tnudge(  1,ng)          sand_01
+!                      ...                         ...
+!                      MUD_Tnudge(NNS,ng)          ...
+!
+!                    User also needs to TURN ON the respective logical switches
+!                    "SAND_Ltclm", described above, to process the required 3D
+!                    sediment tracer climatology data. This data can be set
+!                    with analytical functions (ANA_TCLIMA) or read from input
+!                    climatology NetCDF file(s).
+!
+!                    The nudging coefficients CLIMA(ng)%Tnudgcof can be set
+!                    with analytical functions in "ana_nudgcoef.h"  using CPP
+!                    option ANA_NUDGCOEF.  Otherwise, it will be read from
+!                    NetCDF file NUDNAME.
+!
+!------------------------------------------------------------------------------
